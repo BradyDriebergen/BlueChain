@@ -228,6 +228,11 @@ public class Wallet {
         String nickname = reader.readLine();
         System.out.println("Amount to send?");
         int amount = Integer.valueOf(reader.readLine());
+        System.out.println("Add a note?");
+        String note = null;
+        if(reader.readLine().equals("yes") || reader.readLine().equals("y")){
+            note = reader.readLine();
+        }
 
         Account chosenAccount = null;
         for(Account account : accounts){
@@ -251,6 +256,10 @@ public class Wallet {
         String UID = newTransaction.getUID();
         byte[] signedUID = DSA.signHash(UID, pk);
         newTransaction.setSigUID(signedUID);
+
+        if(note != null){
+            newTransaction.setNote(note);
+        }
 
         System.out.println("Submitting transaction to nodes: ");
         for(Address address : fullNodes){

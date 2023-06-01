@@ -11,6 +11,7 @@ public class DefiTransaction extends Transaction {
     protected String to; //  Public key string of reciever
     protected String from; // Public key string of sender
     protected int amount; // Amount to being transferred
+    protected String note;
     
     public DefiTransaction(String to, String from, int amount, String timestamp){
         this.to = to;
@@ -18,6 +19,14 @@ public class DefiTransaction extends Transaction {
         this.amount = amount;
         this.timestamp = timestamp;
         UID = Hashing.getSHAString(to + from + amount + timestamp); // Hashing above fields to generate a unique timestamp
+    }
+
+    public void setNote(String note){
+        this.note = note;
+    }
+
+    public String getNote(){
+        return note;
     }
 
     public String getTo(){
