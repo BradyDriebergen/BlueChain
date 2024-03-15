@@ -2,6 +2,7 @@ package client;
 
 import java.io.*;
 import java.net.*;
+import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Properties; 
 import java.util.regex.Pattern;
@@ -25,6 +26,8 @@ public class Client {
     boolean test; // Boolean for test vs normal output
     String use;
     DefiClient defiClient;
+
+    HCClient hcClient;
 
     /**
      * Constructs a Client instance.
@@ -114,10 +117,11 @@ public class Client {
         Acceptor acceptor = new Acceptor(this);
         acceptor.start();
 
-        defiClient = new DefiClient(updateLock, reader, myAddress, fullNodes);
+        //defiClient = new DefiClient(updateLock, reader, myAddress, fullNodes);
+        hcClient = new HCClient(updateLock, reader, myAddress, fullNodes);
     }
 
-    public static void main(String[] args) throws IOException{
+    public static void main(String[] args) throws IOException, ParseException{
 
         String asciiArt1 = FigletFont.convertOneLine("BlueChain Client");
         System.out.println(asciiArt1);
@@ -151,14 +155,16 @@ public class Client {
      * Interpret the string input
      * 
      * @param input the string to interpret
+     * @throws ParseException 
      */
-    public void interpretInput(String input){
+    public void interpretInput(String input) throws ParseException{
         try {
             switch(input){
 
                 /* Add account (or something similar depends on use) */
                 case("a"):
                     if(use.equals("Defi")) defiClient.addAccount();
+                    if(use.equals("HC")) hcClient.createAppointment();
                     break;
 
                 /* Submit Transaction */
@@ -169,17 +175,28 @@ public class Client {
                 /* Print accounts (or something similar depends on use) */
                 case("p"):
                     if(use.equals("Defi")) defiClient.printAccounts();
+                    if(use.equals("HC")) hcClient.createPerscription();
                     break;
 
                 /* Print the specific usage / commmands */
                 case("h"):
                     if(use.equals("Defi")) defiClient.printUsage();
+                    if(use.equals("HC")) hcClient.printUsage();
+                    break;
+
+                case("n"):
+                    if(use.equals("HC")) hcClient.createNewPatient();
+                    break;
+
+                case("r"):
+                    if(use.equals("HC")) hcClient.updateRecord();
                     break;
 
                 /* Update full nodes */
                 case("u"):
                     updateFullNode();
                     break;
+    
             }
         } catch (IOException e) {
             System.out.println("Input malformed. Try again.");
@@ -220,8 +237,8 @@ public class Client {
      */
     public void testNetwork(int iterations){
         if(use.equals("Defi")){
-            defiClient.test = true;
-            defiClient.testNetwork(iterations);
+            // defiClient.test = true;
+            // defiClient.testNetwork(iterations);
         }
     }
 
@@ -248,7 +265,7 @@ public class Client {
                     
                     if(incomingMessage.getRequest().name().equals("ALERT_WALLET")){
                         MerkleTreeProof mtp = (MerkleTreeProof) incomingMessage.getMetadata();
-                        defiClient.updateAccounts(mtp);
+                        //defiClient.updateAccounts(mtp);
                     }
                 } catch (IOException e) {
                     System.out.println(e);

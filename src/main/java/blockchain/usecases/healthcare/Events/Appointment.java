@@ -7,14 +7,9 @@ import blockchain.usecases.healthcare.Event;
 public class Appointment extends Event {
 
     private Date date;
-    private String time;
     private String location;
     private String provider;
     
-    public String getTime() {
-        return time;
-    }
-
     public String getProvider() {
         return provider;
     }
@@ -31,10 +26,9 @@ public class Appointment extends Event {
         return location;
     }
 
-    public Appointment(String patientUID, Date date, String time, String location) {
+    public Appointment(String patientUID, Date date, String location) {
         super(patientUID, Action.Appointment);
         this.date = date;
-        this.time = time;
         this.location = location;
     }
 }

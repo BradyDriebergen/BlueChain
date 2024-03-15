@@ -1,11 +1,14 @@
 package blockchain.usecases.healthcare;
 
-public abstract class Event {
+import java.io.Serializable;
+
+public abstract class Event implements Serializable{
 
     public enum Action {
         Appointment,
         Prescription,
-        Record_Update
+        Record_Update,
+        Create_Patient
     }
 
     private String patientUID;

@@ -95,6 +95,8 @@ public class DefiClient {
         String nickname = reader.readLine();
         System.out.println("Amount to send?");
         int amount = Integer.valueOf(reader.readLine());
+        System.out.println("Note?");
+        String note = reader.readLine();
 
         Account chosenAccount = null;
         for(Account account : accounts){
@@ -114,7 +116,7 @@ public class DefiClient {
             return;
         }
 
-        DefiTransaction newTransaction = new DefiTransaction(to, myPublicKeyString, amount, String.valueOf(System.currentTimeMillis()));
+        DefiTransaction newTransaction = new DefiTransaction(to, myPublicKeyString, amount, String.valueOf(System.currentTimeMillis()), note);
         String UID = newTransaction.getUID();
         byte[] signedUID = DSA.signHash(UID, pk);
         newTransaction.setSigUID(signedUID);

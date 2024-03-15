@@ -2,15 +2,15 @@ package blockchain.usecases.healthcare;
 
 import java.util.Date;
 import java.util.HashMap;
-
-import utils.Hashing;
+import java.util.UUID;
 
 public class Patient {
 
     private String UID;
 
     /* Static Fields */
-    private String name;
+    private String firstName;
+    private String lastName;
     private Date dob;
 
     /* Non-static *fields in the form of a map, with the key being something
@@ -20,13 +20,41 @@ public class Patient {
     */
     HashMap<String, String> fields;
 
-    public Patient(String name, Date dob){
-        this.name = name;
+    public Patient(String fName, String lName, Date dob){
+        this.firstName = fName;
+        this.lastName = lName;
         this.dob = dob;
-        UID = Hashing.getSHAString(name + dob.toString());
+        this.fields = new HashMap<String, String>();
+        this.UID = UUID.randomUUID().toString().replace("-", "");
     }
 
     public String getUID(){
         return UID;
+    }
+
+    public String getFirstName() {
+        return firstName;
+    }
+
+    public String getLastName() {
+        return lastName;
+    }
+
+    public Date getDob() {
+        return dob;
+    }
+
+    public void addField(String key, String value){
+        fields.put(key, value);
+    }
+
+    public String getField(String key){
+        return fields.get(key);
+    }
+
+    @Override
+    public String toString() {
+        return "Name: " + this.firstName + " " + this.lastName + " | DOB: " + this.dob.toString();
+        // Also return the fields entered by doctors
     }
 }
