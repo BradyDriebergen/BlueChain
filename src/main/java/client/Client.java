@@ -117,7 +117,7 @@ public class Client {
         Acceptor acceptor = new Acceptor(this);
         acceptor.start();
 
-        //defiClient = new DefiClient(updateLock, reader, myAddress, fullNodes);
+        defiClient = new DefiClient(updateLock, reader, myAddress, fullNodes);
         hcClient = new HCClient(updateLock, reader, myAddress, fullNodes);
     }
 
@@ -237,8 +237,8 @@ public class Client {
      */
     public void testNetwork(int iterations){
         if(use.equals("Defi")){
-            // defiClient.test = true;
-            // defiClient.testNetwork(iterations);
+            defiClient.test = true;
+            defiClient.testNetwork(iterations);
         }
     }
 
@@ -265,7 +265,7 @@ public class Client {
                     
                     if(incomingMessage.getRequest().name().equals("ALERT_WALLET")){
                         MerkleTreeProof mtp = (MerkleTreeProof) incomingMessage.getMetadata();
-                        //defiClient.updateAccounts(mtp);
+                        defiClient.updateAccounts(mtp);
                     }
                 } catch (IOException e) {
                     System.out.println(e);

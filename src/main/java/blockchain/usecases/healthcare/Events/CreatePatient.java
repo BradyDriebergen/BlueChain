@@ -8,8 +8,8 @@ public class CreatePatient extends Event {
 
     Patient patient;
 
-    public CreatePatient(String patientUID, Action action, Patient patient) {
-        super(patientUID, action);
+    public CreatePatient(Action action, Patient patient) {
+        super(action);
         this.patient = patient;
     }
 

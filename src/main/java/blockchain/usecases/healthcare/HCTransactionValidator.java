@@ -1,3 +1,11 @@
+/**
+ * This class is used to validate the transaction before it is added to the blockchain. It does so
+ * by checking the event of the transaction and making sure all the data is not null. If the data is
+ * null, then the transaction is not valid and will not be added to the blockchain.
+ * 
+ * @date 03-20-2021
+ */
+
 package blockchain.usecases.healthcare;
 
 import blockchain.TransactionValidator;
@@ -5,28 +13,30 @@ import blockchain.usecases.healthcare.Events.*;
 
 public class HCTransactionValidator extends TransactionValidator {
 
+
+    /**
+     * This method validates the transaction before it is added to the blockchain. It does so by
+     * checking the event of the transaction and making sure all the data is not null. If the data is
+     * null, then the transaction is not valid and will not be added to the blockchain.
+     * @param objects The objects to validate.
+     * @return True if the transaction is valid, false otherwise.
+     */
     @Override
     public boolean validate(Object[] objects) {
         HCTransaction transaction = (HCTransaction) objects[0];
 
-        if(transaction.getEvent().getAction().name().equals("Appointment")){
+        if(transaction.getEvent().getAction().name().equals("Appointment")){ // If the event is an appointment
             Appointment appointment = (Appointment) transaction.getEvent();
-            // if(appointment.getTime())
 
             // Checks to see if any data is null
-            if (appointment.getPatientUID() == null) { return false; }
             if (appointment.getProvider() == null) { return false; }
             if (appointment.getLocation() == null) { return false; }
             if (appointment.getDate() == null) { return false; }
 
-
-            // Make sure they don't get pass the client and fill something in that cannnot be allowed.
-
-        } else if (transaction.getEvent().getAction().name().equals("Prescription")){
+        } else if (transaction.getEvent().getAction().name().equals("Prescription")){ // If the event is a prescription
             Prescription prescription = (Prescription) transaction.getEvent();
 
             // Checks to see if any data is null
-            if (prescription.getPatientUID() == null) { return false; }
             if (prescription.getDate() == null) { return false; }
             if (prescription.getMedication() == null) { return false; }
             if (prescription.getProvider() == null) { return false; }
@@ -34,11 +44,10 @@ public class HCTransactionValidator extends TransactionValidator {
             if (prescription.getPerscribedCount() == 0) { return false; }
 
 
-        } else if (transaction.getEvent().getAction().name().equals("Record_Update")) {
+        } else if (transaction.getEvent().getAction().name().equals("Record_Update")) { // If the event is a record update
             RecordUpdate recordUpdate = (RecordUpdate) transaction.getEvent();
 
             // Checks to see if any data is null
-            if (recordUpdate.getPatientUID() == null) { return false; }
             if (recordUpdate.getDate() == null) { return false; }
             if (recordUpdate.getKey() == null) { return false; }
             if (recordUpdate.getValue() == null) { return false; }
