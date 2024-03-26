@@ -322,7 +322,11 @@ public class HCClient {
     }
 
     
-
+    /**
+     * TEST METHOD. Submits a transaction to the network.
+     * @param event The event to submit.
+     * @param patientUID The UID of the patient.
+     */
     protected void testSubmitTransaction(Event event, String patientUID) {
 
         HCTransaction newTransaction = new HCTransaction(event, patientUID);
