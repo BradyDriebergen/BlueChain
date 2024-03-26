@@ -17,18 +17,19 @@ import java.net.Socket;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.ArrayList;
 import java.util.HashSet;
 
 import blockchain.usecases.healthcare.Event;
 import blockchain.usecases.healthcare.HCTransaction;
 import blockchain.usecases.healthcare.Patient;
-import blockchain.usecases.healthcare.Event.Action;
 import blockchain.usecases.healthcare.Events.*;
 import communication.messaging.Message;
 import communication.messaging.Messager;
 import me.tongfei.progressbar.ProgressBar;
 import utils.Address;
+import utils.merkletree.MerkleTreeProof;
 
 public class HCClient {
     
@@ -41,6 +42,8 @@ public class HCClient {
     HashSet<HCTransaction> seenTransactions;
     // List that contains all the events that have been created.
     ArrayList<Event> events;
+    ArrayList<Patient> patients;
+
 
     private SimpleDateFormat formatter;
 
@@ -60,6 +63,7 @@ public class HCClient {
 
         this.seenTransactions = new HashSet<>();
         this.events = new ArrayList<Event>();
+        this.patients = new ArrayList<Patient>();
 
         formatter = new SimpleDateFormat("dd-MM-yyyy HH:mm a");
     }
@@ -142,6 +146,8 @@ public class HCClient {
         newTransaction.setSigUID(signedUID);
 
         submitToNodes(newTransaction);
+
+        
     }
 
     /**
@@ -186,12 +192,80 @@ public class HCClient {
         Date dob = new Date(Long.valueOf(reader.readLine()));
 
         Patient patient = new Patient(fname, lname, dob);
-        CreatePatient createPatient = new CreatePatient(Action.Create_Patient, patient);
-        HCTransaction newTransaction = new HCTransaction(createPatient, patient.getUID());
-        byte[] signedUID = patient.getUID().getBytes();
-        newTransaction.setSigUID(signedUID);
 
-        submitToNodes(newTransaction);
+        patients.add(patient);
+
+        System.out.println("Patient successfully created. Patient UID: " + patient.getUID());
+    }
+
+    public void showPatientDetails() throws IOException {
+        System.out.println("Enter the patient's UID:");
+        String patientUID = reader.readLine();
+
+        //updatePatientDetails();
+
+        for(Patient patient : patients){
+            if(patient.getUID().equals(patientUID)){
+                HashMap<String, String> fields = patient.getFields();
+                ArrayList<Event> patientEvents = patient.getEvents();
+
+                System.out.println("Patient details:");
+                System.out.println("First name: " + patient.getFirstName());
+                System.out.println("Last name: " + patient.getLastName());
+                System.out.println("Date of birth: " + patient.getDob());
+
+                for(String key : fields.keySet()){
+                    System.out.println(key + ": " + fields.get(key));
+                }
+
+                System.out.println("\nEVENTS:");
+
+                for (Event event : events) {
+                    //Print out all events.
+                }
+
+                return;
+            }
+        }
+
+        System.out.println("Patient not found.");
+    }
+
+    public void updatePatientDetails(MerkleTreeProof mtp) throws IOException {
+        synchronized(updateLock){
+
+            HCTransaction transaction = (HCTransaction) mtp.getTransaction();
+
+            for(HCTransaction existingTransaction : seenTransactions){
+                if(existingTransaction.equals(transaction)){
+                    return;
+                }
+            }
+            
+            seenTransactions.add(transaction);
+
+            if(!mtp.confirmMembership()){
+                System.out.println("Could not validate tx in MerkleTreeProof" );
+                return;
+            }
+    
+            for(Patient patient : patients){ 
+                if (patient.getUID().equals(transaction.getPatientUID()))
+                    if (transaction.getEvent() instanceof RecordUpdate){
+                        RecordUpdate recordUpdate = (RecordUpdate) transaction.getEvent();
+                        patient.addField(recordUpdate.getKey(), recordUpdate.getValue());
+                    } else if (transaction.getEvent() instanceof Prescription){
+                        Prescription prescription = (Prescription) transaction.getEvent();
+                        patient.addEvent(prescription);
+                    } else if (transaction.getEvent() instanceof Appointment){
+                        Appointment appointment = (Appointment) transaction.getEvent();
+                        patient.addEvent(appointment);
+                    }
+                }
+            }
+
+            if(!this.test) System.out.println("\nFull node has update. Updating patients..." );
+            //if(!this.test) printAccounts();
     }
 
     /**
@@ -245,15 +319,8 @@ public class HCClient {
                 }
             }
 
-            events.add(newAppointment);
-
-
-            // Request what to do here to message the wallet.
-            // Object[] data = new Object[2];
-            // data[0] = pubKeyString;
-            // data[1] = myAddress;
-            // Messager.sendOneWayMessage(new Address(fullNodes.get(0).getPort(), fullNodes.get(0).getHost()), 
-            // new Message(Message.Request.ALERT_WALLET, data), myAddress);
+            Messager.sendOneWayMessage(new Address(fullNodes.get(0).getPort(), fullNodes.get(0).getHost()),
+            new Message(Message.Request.ALERT_HC_WALLET), myAddress);
         }
     }
 
@@ -273,14 +340,8 @@ public class HCClient {
                 }
             }
 
-            events.add(newPerscription);
-
-            // Request what to do here to message the wallet.
-            // Object[] data = new Object[2];
-            // data[0] = pubKeyString;
-            // data[1] = myAddress;
-            // Messager.sendOneWayMessage(new Address(fullNodes.get(0).getPort(), fullNodes.get(0).getHost()), 
-            // new Message(Message.Request.ALERT_WALLET, data), myAddress);
+            Messager.sendOneWayMessage(new Address(fullNodes.get(0).getPort(), fullNodes.get(0).getHost()),
+            new Message(Message.Request.ALERT_HC_WALLET), myAddress);
         }
     }
 
@@ -299,22 +360,22 @@ public class HCClient {
                     return;
                 }
             }
+            
 
-            events.add(newRecord);
-
-            // Request what to do here to message the wallet.
-            // Object[] data = new Object[2];
-            // data[0] = pubKeyString;
-            // data[1] = myAddress;
-            // Messager.sendOneWayMessage(new Address(fullNodes.get(0).getPort(), fullNodes.get(0).getHost()), 
-            // new Message(Message.Request.ALERT_WALLET, data), myAddress);
+            Messager.sendOneWayMessage(new Address(fullNodes.get(0).getPort(), fullNodes.get(0).getHost()),
+            new Message(Message.Request.ALERT_HC_WALLET), myAddress);
         }
     }
 
-    // Ask what to do here
-    // public void testSubmitTransaction() {
+    protected void testSubmitTransaction(Event event, String patientUID) {
 
-    // }
+        HCTransaction newTransaction = new HCTransaction(event, patientUID);
+        newTransaction.setSigUID(patientUID.getBytes());
+
+        for(Address address : fullNodes){
+            submitTransaction(newTransaction, address);
+        }
+    }
 
     /**
      * TEST METHOD. Tests the network by adding a number of appointments, perscriptions, and record updates
@@ -324,20 +385,14 @@ public class HCClient {
     void testNetwork(int j){
         System.out.println("Beginning Test");
         try {     
-            boolean eventsTracked = true;
+            Patient patient = new Patient("John", "Doe", new Date());
             
             ProgressBar pb = new ProgressBar("Test", j);
             pb.start(); // the progress bar starts timing
             pb.setExtraMessage("Testing..."); // Set extra message to display at the end of the bar
             
             for(int i = 0; i < j; i++){
-                    testAddAppointment("Provider " + i);
-                    Thread.sleep(500);
-                    pb.step(); 
-                    testAddPerscription("Provider " + i);
-                    Thread.sleep(500);
-                    pb.step();
-                    testUpdateRecord("Record " + i);
+                    testSubmitTransaction(new Appointment(new Date(), "TEST", "Provider " + i), patient.getUID());
                     Thread.sleep(500);
                     pb.step();
             }
@@ -346,34 +401,15 @@ public class HCClient {
             System.out.println("Sleeping wallet for last minute updates...");
             Thread.sleep(100000);
 
-            for (Event event : events) {
-                if(event instanceof Appointment){
-                    Appointment appointment = (Appointment) event;
-                    if(!appointment.getProvider().equals("Provider " + j)){
-                        eventsTracked = false;
-                    }
-                } else if (event instanceof Prescription){
-                    Prescription prescription = (Prescription) event;
-                    if(!prescription.getProvider().equals("Provider " + j)){
-                        eventsTracked = false;
-                    }
-                } else if (event instanceof RecordUpdate){
-                    RecordUpdate recordUpdate = (RecordUpdate) event;
-                    if(!recordUpdate.getKey().equals("Record " + j)){
-                        eventsTracked = false;
-                    }
-                } else {
-                    eventsTracked = false;
-                }
-            }
+            // Make sure that the ledger matches the added events.
 
-            if(eventsTracked){
+            if(patient.getEvents().size() == j) {
                 System.out.println("\n*********************Test passed.*********************");
             }else{
                 System.out.println("\n*********************Test Failed*********************");
             }
 
-            System.out.println("All events counted for: " + eventsTracked);
+            System.out.println(patient.getEvents().size() + " events added.");
 
         } catch (InterruptedException e) {
             e.printStackTrace();
@@ -388,7 +424,8 @@ public class HCClient {
         System.out.println("a: Create a new appointment");
         System.out.println("p: Create a new perscription");
         System.out.println("r: Update a patient's record");
-        // System.out.println("c: create a new patient");
+        System.out.println("c: create a new patient");
+        System.out.println("s: Show patient details");
         System.out.println("u: Update full nodes");
     }
 }

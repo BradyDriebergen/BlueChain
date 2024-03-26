@@ -8,10 +8,30 @@
 
 package blockchain.usecases.healthcare;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+
+import blockchain.Transaction;
 import blockchain.TransactionValidator;
 import blockchain.usecases.healthcare.Events.*;
+import communication.messaging.Message;
+import communication.messaging.Messager;
+import utils.Address;
+import utils.LockManager;
+import utils.merkletree.MerkleTree;
 
 public class HCTransactionValidator extends TransactionValidator {
+
+    private LockManager lockManager;
+    private ArrayList<Address> clientsToAlert;
+
+    public HCTransactionValidator() {
+        this.lockManager = new LockManager();
+        lockManager.addLock("eventsLock");
+
+        this.clientsToAlert = new ArrayList<Address>();
+    }
 
 
     /**
@@ -52,14 +72,6 @@ public class HCTransactionValidator extends TransactionValidator {
             if (recordUpdate.getKey() == null) { return false; }
             if (recordUpdate.getValue() == null) { return false; }
 
-        } else if (transaction.getEvent().getAction().name().equals("Create_Patient")) {
-            CreatePatient createPatient = (CreatePatient) transaction.getEvent();
-
-            // Checks to see if any data is null
-            if (createPatient.getPatient().getUID() == null) { return false; }
-            if (createPatient.getPatient().getFirstName() == null) { return false; }
-            if (createPatient.getPatient().getLastName() == null) { return false; }
-            if (createPatient.getPatient().getDob() == null) { return false; }
         }
 
         //HCTransaction transaction = new HCTransaction(event);        
@@ -69,5 +81,47 @@ public class HCTransactionValidator extends TransactionValidator {
     // public boolean isFullString() {
 
     // }
+
+    public static void updateEvents(HashMap<String, HCTransaction> blockTxList){
+        HashSet<String> keys = new HashSet<>(blockTxList.keySet());
+
+        // For each hash of a transaction
+        for(String key : keys){
+            HCTransaction transaction = blockTxList.get(key); // Grabbing the first transaction from our list of tx using hash
+
+            Event event = transaction.getEvent();
+            String uid = transaction.getPatientUID();
+
+            /* Update our accounts based on this transaction */
+        }
+    }
+
+    public void alertWallet(HashMap<String, Transaction> txMap, MerkleTree mt, Address myAddress){
+        HashMap<String, HCTransaction> hcTxMap = new HashMap<>();
+        HashSet<String> keys = new HashSet<>(txMap.keySet());
+
+        for(String key : keys){
+            HCTransaction transactionInList = (HCTransaction) txMap.get(key);
+            hcTxMap.put(key, transactionInList);
+        }
+
+        synchronized(lockManager.getLock("eventsLock")){
+            HCTransactionValidator.updateEvents(hcTxMap);
+
+            for (Address address : clientsToAlert) {
+                for(String transHash : txMap.keySet()) {
+                    HCTransaction hctx = (HCTransaction) txMap.get(transHash);
+                    Messager.sendOneWayMessage(address, 
+                    new Message(Message.Request.ALERT_HC_WALLET, mt.getProof(txMap.get(transHash))), myAddress);
+                }
+            }
+        }
+    }
+
+    public void addClientsToAlert(Address address){
+        synchronized(lockManager.getLock("eventsLock")){
+            clientsToAlert.add(address);
+        }
+    }
     
 }

@@ -776,10 +776,12 @@ public class Node  {
         blockchain.add(block);
         System.out.println("Node " + myAddress.getPort() + ": " + chainString(blockchain) + " MP: " + mempool.values());
 
-
         if(configValues.getUse().equals("Defi")){
             DefiTransactionValidator dtv = (DefiTransactionValidator) tv;
             dtv.alertWallet(txMap, mt, myAddress);
+        } else {
+            HCTransactionValidator hctv = (HCTransactionValidator) tv;
+            hctv.alertWallet(txMap, mt, myAddress);
         }
 
 

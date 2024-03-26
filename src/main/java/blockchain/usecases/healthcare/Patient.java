@@ -1,5 +1,6 @@
 package blockchain.usecases.healthcare;
 
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.UUID;
@@ -19,6 +20,7 @@ public class Patient {
      * predict
     */
     HashMap<String, String> fields;
+    ArrayList<Event> events;
 
     public Patient(String fName, String lName, Date dob){
         this.firstName = fName;
@@ -36,20 +38,40 @@ public class Patient {
         return firstName;
     }
 
+    public void setFirstName(String firstName) {
+        this.firstName = firstName;
+    }
+
     public String getLastName() {
         return lastName;
+    }
+
+    public void setLastName(String lastName) {
+        this.lastName = lastName;
     }
 
     public Date getDob() {
         return dob;
     }
 
+    public void setDob(Date dob) {
+        this.dob = dob;
+    }
+
     public void addField(String key, String value){
         fields.put(key, value);
     }
 
-    public String getField(String key){
-        return fields.get(key);
+    public void addEvent(Event event){
+        events.add(event);
+    }
+
+    public ArrayList<Event> getEvents(){
+        return events;
+    }
+
+    public HashMap<String, String> getFields(){
+        return fields;
     }
 
     @Override

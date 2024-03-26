@@ -302,10 +302,10 @@ public class DefiClient {
             
 
             for(int i = 0; i < j; i++){
-                    testAddAccount(String.valueOf(i));
-                    Thread.sleep(500);
-                    testSubmitTransaction(String.valueOf(i), DSA.bytesToString(accounts.get(0).getKeyPair().getPublic().getEncoded()), 10);
-                    pb.step(); 
+                testAddAccount(String.valueOf(i));
+                Thread.sleep(500);
+                testSubmitTransaction(String.valueOf(i), DSA.bytesToString(accounts.get(0).getKeyPair().getPublic().getEncoded()), 10);
+                pb.step(); 
             }
             pb.stop(); // stops the progress bar
             System.out.println("Sleeping wallet for last minute updates...");

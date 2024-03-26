@@ -135,9 +135,16 @@ public class Client {
             if(args[0].equals("-port")){
                 port = Integer.valueOf(args[0]);
             }else if(args[0].equals("-test")){
-                Client defiClient = new Client(port);
-                defiClient.test = true;
-                defiClient.testNetwork( Integer.valueOf(args[1]));
+                /* if(use.equals("Defi")){
+                    Client defiClient = new Client(port);
+                    defiClient.test = true;
+                    defiClient.testNetwork( Integer.valueOf(args[1]));
+                } else { */
+                    Client hcClient = new Client(port);
+                    hcClient.test = true;
+                    hcClient.testNetwork( Integer.valueOf(args[1]));
+                //}
+
                 System.exit(0); // We just test then exit
             }
         }
@@ -239,6 +246,9 @@ public class Client {
         if(use.equals("Defi")){
             defiClient.test = true;
             defiClient.testNetwork(iterations);
+        } else {
+            hcClient.test = true;
+            hcClient.testNetwork(iterations);
         }
     }
 
@@ -266,6 +276,10 @@ public class Client {
                     if(incomingMessage.getRequest().name().equals("ALERT_WALLET")){
                         MerkleTreeProof mtp = (MerkleTreeProof) incomingMessage.getMetadata();
                         defiClient.updateAccounts(mtp);
+                    } else if (incomingMessage.getRequest().name().equals("ALERT_HC_WALLET")) {
+                        System.out.println("Full Node has messaged me");
+                        MerkleTreeProof mtp = (MerkleTreeProof) incomingMessage.getMetadata();
+                        hcClient.updatePatientDetails(mtp);
                     }
                 } catch (IOException e) {
                     System.out.println(e);
