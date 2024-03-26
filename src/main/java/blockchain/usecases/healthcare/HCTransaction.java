@@ -28,7 +28,7 @@ public class HCTransaction extends Transaction {
         this.patientUID = patientUID;
 
         // Create unique identifier for the transaction assigned to UID
-        UID = Hashing.getSHAString(patientUID + event.getAction().name() + System.currentTimeMillis());
+        UID = Hashing.getSHAString(patientUID + event.hashCode() + timestamp);
     }
 
     /**
@@ -54,6 +54,6 @@ public class HCTransaction extends Transaction {
     @Override
     public String toString() {
         // Set the string representation of the transaction
-        return event.getAction().name() + " for " + patientUID;
+        return event.getAction().name() + " ID: " + UID;
     }    
 }

@@ -27,6 +27,7 @@ public class Patient {
         this.lastName = lName;
         this.dob = dob;
         this.fields = new HashMap<String, String>();
+        this.events = new ArrayList<Event>();
         this.UID = UUID.randomUUID().toString().replace("-", "");
     }
 

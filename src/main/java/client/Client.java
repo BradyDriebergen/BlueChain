@@ -273,7 +273,7 @@ public class Client {
                     ObjectInputStream oin = new ObjectInputStream(in);
                     Message incomingMessage = (Message) oin.readObject();
                     
-                    if(incomingMessage.getRequest().name().equals("ALERT_WALLET")){
+                    if(incomingMessage.getRequest().name().equals("ALERT_WALLET")) {
                         MerkleTreeProof mtp = (MerkleTreeProof) incomingMessage.getMetadata();
                         defiClient.updateAccounts(mtp);
                     } else if (incomingMessage.getRequest().name().equals("ALERT_HC_WALLET")) {

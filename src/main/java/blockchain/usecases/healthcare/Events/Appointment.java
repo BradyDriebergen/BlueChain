@@ -54,4 +54,9 @@ public class Appointment extends Event {
         this.location = location;
         this.provider = provider;
     }
+
+    @Override
+    public String toString() {
+        return "Appointment: " + date + " at " + location + " with " + provider;
+    }
 }

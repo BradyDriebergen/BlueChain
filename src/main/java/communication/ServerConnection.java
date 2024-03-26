@@ -129,6 +129,7 @@ public class ServerConnection extends Thread {
                 dtv.addAccountsToAlert((String) data[0], (Address) data[1]);
                 break;
             case ALERT_HC_WALLET:
+                System.out.println("Message recieved");
                 Object mData = (Object) incomingMessage.getMetadata();
                 HCTransactionValidator hctv = (HCTransactionValidator) tv;
                 hctv.addClientsToAlert((Address) mData);
