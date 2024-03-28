@@ -15,10 +15,7 @@ public abstract class Event implements Serializable{
     public enum Action {
         Appointment,
         Prescription,
-        Record_Update,
-        // Possibility could be to take this out of events and make it a separate
-        //      method for creating patients in the client.
-        Create_Patient
+        Record_Update
     }
 
     private Action action;

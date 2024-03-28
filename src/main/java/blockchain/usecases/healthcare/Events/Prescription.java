@@ -76,4 +76,7 @@ public class Prescription extends Event {
         this.medication = medication;
     }
     
+    public String toString() {
+        return "Prescription: " + perscribedCount + "ct of " + medication + " prescribed by " + provider + " on " + date + " at " + address;
+    }
 }

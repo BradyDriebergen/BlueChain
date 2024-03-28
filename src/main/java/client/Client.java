@@ -199,6 +199,14 @@ public class Client {
                     if(use.equals("HC")) hcClient.updateRecord();
                     break;
 
+                case("s"):
+                    if(use.equals("HC")) hcClient.showPatientDetails();
+                    break;
+
+                case("c"):
+                    if(use.equals("HC")) hcClient.createNewPatient();
+                    break;
+
                 /* Update full nodes */
                 case("u"):
                     updateFullNode();
@@ -277,7 +285,7 @@ public class Client {
                         MerkleTreeProof mtp = (MerkleTreeProof) incomingMessage.getMetadata();
                         defiClient.updateAccounts(mtp);
                     } else if (incomingMessage.getRequest().name().equals("ALERT_HC_WALLET")) {
-                        System.out.println("Full Node has messaged me");
+                        //System.out.println("Full Node has messaged me");
                         MerkleTreeProof mtp = (MerkleTreeProof) incomingMessage.getMetadata();
                         hcClient.updatePatientDetails(mtp);
                     }

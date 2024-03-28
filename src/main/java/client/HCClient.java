@@ -40,10 +40,7 @@ public class HCClient {
     protected boolean test;
 
     HashSet<HCTransaction> seenTransactions;
-    // List that contains all the events that have been created.
-    ArrayList<Event> events;
     ArrayList<Patient> patients;
-
 
     private SimpleDateFormat formatter;
 
@@ -64,7 +61,7 @@ public class HCClient {
         this.seenTransactions = new HashSet<>();
         this.patients = new ArrayList<Patient>();
 
-        formatter = new SimpleDateFormat("dd-MM-yyyy HH:mm a");
+        this.formatter = new SimpleDateFormat("dd-MM-yyyy HH:mm a");
     }
 
     /**
@@ -87,6 +84,14 @@ public class HCClient {
         String location = reader.readLine();
         System.out.println("Enter the appointment's provider:");
         String provider = reader.readLine();
+        System.out.println();
+
+        Appointment appointment = new Appointment(date, location, provider);
+        HCTransaction newTransaction = new HCTransaction(appointment, patientUID);
+        byte[] signedUID = patientUID.getBytes();
+        newTransaction.setSigUID(signedUID);
+
+        submitToNodes(newTransaction);
 
         System.out.println("\n--APPOINTMENT CREATED--");
         System.out.println("Appointment info:");
@@ -94,14 +99,7 @@ public class HCClient {
         System.out.println("Appointment date: " + date);
         System.out.println("Location: " + location);
         System.out.println("Provider: " + provider);
-
-        Appointment appointment = new Appointment(date, location, provider);
-        events.add(appointment);
-        HCTransaction newTransaction = new HCTransaction(appointment, patientUID);
-        byte[] signedUID = patientUID.getBytes();
-        newTransaction.setSigUID(signedUID);
-
-        submitToNodes(newTransaction);
+        System.out.println();
     }
 
     /**
@@ -128,25 +126,23 @@ public class HCClient {
         String provider = reader.readLine();
         System.out.println("Enter address of the issued perscription:");
         String address = reader.readLine();
-
-        System.out.println("\n--PERSCRIPTION CREATED--");
-        System.out.println("Perscription info:");
-        System.out.println("Patient UID: " + patientUID);
-        System.out.println("Perscription date: " + date);
-        System.out.println("Medication: " + medication);
-        System.out.println("Perscribed count: " + count);
-        System.out.println("Provider: " + provider);
-        System.out.println("Address: " + address);
+        System.out.println();
 
         Prescription prescription = new Prescription(medication, provider, address, date, count);
-        events.add(prescription);
         HCTransaction newTransaction = new HCTransaction(prescription, patientUID);
         byte[] signedUID = patientUID.getBytes();
         newTransaction.setSigUID(signedUID);
 
         submitToNodes(newTransaction);
 
-        
+        System.out.println("\n--PERSCRIPTION CREATED--");
+        System.out.println("Patient UID: " + patientUID);
+        System.out.println("Perscription date: " + date);
+        System.out.println("Medication: " + medication);
+        System.out.println("Perscribed count: " + count);
+        System.out.println("Provider: " + provider);
+        System.out.println("Address: " + address);
+        System.out.println();
     }
 
     /**
@@ -163,52 +159,58 @@ public class HCClient {
         String key = reader.readLine();
         System.out.println("Enter the new value of the record:");
         String value = reader.readLine();
-
-        System.out.println("\n--RECORD UPDATED--");
-        System.out.println("Record info:");
-        System.out.println("Patient UID: " + patientUID);
-        System.out.println("Record to Update: " + key);
-        System.out.println("New value: " + value);
+        System.out.println();
 
         // Date is the current date that the record is updated
         RecordUpdate recordUpdate = new RecordUpdate(new Date(), key, value);
-        events.add(recordUpdate);
         HCTransaction newTransaction = new HCTransaction(recordUpdate, patientUID);
         byte[] signedUID = patientUID.getBytes();
         newTransaction.setSigUID(signedUID);
 
         submitToNodes(newTransaction);
+
+        System.out.println("\n--RECORD UPDATED--");
+        System.out.println("Patient UID: " + patientUID);
+        System.out.println("Record to Update: " + key);
+        System.out.println("New value: " + value);
+        System.out.println();
     }
 
     // Might not be necessary, requires consultation.
-    public void createNewPatient() throws IOException {
+    public void createNewPatient() throws IOException, ParseException {
+        formatter = new SimpleDateFormat("dd-MM-yyyy");
+
         System.out.println("Creating a new patient");
         System.out.println("Enter the patient's first name:");
         String fname = reader.readLine();
         System.out.println("Enter the patient's last name:");
         String lname = reader.readLine();
-        System.out.println("Enter the patient's date of birth:");
-        Date dob = new Date(Long.valueOf(reader.readLine()));
+        System.out.println("Enter the patient's date of birth (dd-MM-yyyy):");
+        String dob = reader.readLine();
+        Date date = formatter.parse(dob);
 
-        Patient patient = new Patient(fname, lname, dob);
+        Patient patient = new Patient(fname, lname, date);
 
         patients.add(patient);
 
-        System.out.println("Patient successfully created. Patient UID: " + patient.getUID());
+        Object data = new Object();
+        data = myAddress;
+        Messager.sendOneWayMessage(new Address(fullNodes.get(0).getPort(), fullNodes.get(0).getHost()),
+        new Message(Message.Request.ALERT_HC_WALLET, data), myAddress);
+
+        System.out.println("\nPatient successfully created. Patient UID: " + patient.getUID());
     }
 
     public void showPatientDetails() throws IOException {
         System.out.println("Enter the patient's UID:");
         String patientUID = reader.readLine();
 
-        //updatePatientDetails();
-
         for(Patient patient : patients){
             if(patient.getUID().equals(patientUID)){
                 HashMap<String, String> fields = patient.getFields();
                 ArrayList<Event> patientEvents = patient.getEvents();
 
-                System.out.println("Patient details:");
+                System.out.println("\n--PATIENT DETAILS--");
                 System.out.println("First name: " + patient.getFirstName());
                 System.out.println("Last name: " + patient.getLastName());
                 System.out.println("Date of birth: " + patient.getDob());
@@ -222,6 +224,8 @@ public class HCClient {
                 for (Event event : patientEvents) {
                     System.out.println(event.toString());
                 }
+
+                System.out.println();
 
                 return;
             }
@@ -248,7 +252,7 @@ public class HCClient {
                 return;
             }
 
-            System.out.println("Updating patient details...");
+            if (!this.test) System.out.println("Updating patient details...");
     
             for(Patient patient : patients){ 
                 if (patient.getUID().equals(transaction.getPatientUID()))
@@ -265,7 +269,10 @@ public class HCClient {
                 }
             }
 
-            if(!this.test) System.out.println("\nFull node has update. Updating patients..." );
+            if(!this.test) {
+                System.out.println("\nFull node has update. Updating patients...");
+                System.out.print(">");
+            }
     }
 
     /**
@@ -357,7 +364,7 @@ public class HCClient {
                     String provider = "Provider " + i;
                     Appointment apt = testAddAppointment(provider);
                     testSubmitTransaction(apt, patient.getUID());
-                    Thread.sleep(500);
+                    Thread.sleep(2000);
                     pb.step();
             }
 
